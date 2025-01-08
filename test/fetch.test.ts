@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { mockFetch } from "./helpers/utils.ts";
 import { fetchWithCallbacks } from "../src/fetch/main.ts";
+import { mockFetch } from "./helpers/utils.ts";
 
 type APIFetchData = {
     success: {
@@ -60,7 +60,11 @@ Deno.test("[before] : should handle promise rejection in before callback", () =>
 Deno.test("[after] : should return the before callback's return data", async () => {
     const result = await fetchWithCallbacks<never, never, "Hi from before">("", {
         before: () => "Hi from before",
-        after: (beforeReturn) => beforeReturn,
+        after: ({ json, res }, beforeData) => {
+            assertEquals(json, { message: "Not Found" });
+            assertEquals(res.status, 404);
+            return beforeData;
+        },
     });
 
     assertEquals(result.afterData, "Hi from before");
