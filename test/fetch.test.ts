@@ -58,12 +58,11 @@ Deno.test("[before] : should handle promise rejection in before callback", () =>
 
 // Test: Return the before callback's return data in after callback
 Deno.test("[after] : should return the before callback's return data", async () => {
+    mockFetch({ returnData: {}, expected: "success" });
     const result = await fetchWithCallbacks<never, never, "Hi from before">("", {
         before: () => "Hi from before",
-        after: ({ json, res }, beforeData) => {
-            assertEquals(json, { message: "Not Found" });
-            assertEquals(res.status, 404);
-            return beforeData;
+        after: (context) => {
+            return context.before;
         },
     });
 
