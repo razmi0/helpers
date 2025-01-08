@@ -10,6 +10,7 @@ export const mockFetch = <T>({
 }) => {
     globalThis.fetch = (_input: string | URL | Request = "") => {
         switch (expected) {
+            // not implemented
             case "mutated":
                 return Promise.resolve(
                     new Response(JSON.stringify(returnData), {
