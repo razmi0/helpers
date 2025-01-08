@@ -7,8 +7,26 @@ import { safe } from "../safe/main.ts";
 export type FetchCallbacks<JsonResponse, JsonError, BeforeReturnType, AfterReturnType> = {
     onError?: (res: Response, data: JsonError) => unknown;
     onSuccess?: (res: Response, data: JsonResponse) => unknown;
-    before?: () => BeforeReturnType;
-    after?: (args?: BeforeReturnType) => AfterReturnType;
+    before?: (fetchOptions: RequestInit) => BeforeReturnType;
+    after?: (context: { res: Response; json: JsonError | JsonResponse }, args?: BeforeReturnType) => AfterReturnType;
+};
+
+/**
+ * @info Success response type
+ */
+export type SuccessResponse<JsonResponse, AfterReturnType> = {
+    response: Response;
+    data: JsonResponse;
+    afterData: AfterReturnType;
+};
+
+/**
+ * @info Error response type
+ */
+export type ErrorResponse<JsonError, AfterReturnType> = {
+    response: Response;
+    data: JsonError;
+    afterData: AfterReturnType;
 };
 
 /**
@@ -55,47 +73,35 @@ export const fetchWithCallbacks = <
 >(
     url: string,
     callbacks: FetchCallbacks<JsonResponse, JsonError, BeforeReturnType, AfterReturnType>
-):
-    | Promise<{
-          response: Response;
-          data: JsonResponse;
-          afterData: AfterReturnType;
-      }>
-    | Promise<{
-          response: Response;
-          data: JsonError;
-          afterData: AfterReturnType;
-      }>
-    | Promise<{
-          response: Response;
-          data: JsonResponse | JsonError;
-          afterData: AfterReturnType;
-      }> => {
+): Promise<SuccessResponse<JsonResponse, AfterReturnType> | ErrorResponse<JsonError, AfterReturnType>> => {
     return safe(async () => {
         const { onError, onSuccess, before, after } = callbacks;
         let data: JsonResponse | JsonError;
+        const options: RequestInit = {};
 
         // Execute the `before` callback if provided.
-        const beforePayload = before ? (before() as BeforeReturnType) : undefined;
+        const beforePayload = before ? (before(options) as BeforeReturnType) : undefined;
 
         // Perform the fetch operation and parse the JSON response.
-        const { response, json } = await (async () => {
-            const response = await fetch(url);
-            return { response, json: (await response.json()) as JsonResponse | JsonError };
+        const { res, json } = await (async () => {
+            const res = await fetch(url, options);
+            return { res, json: (await res.json()) as JsonResponse | JsonError };
         })();
 
         let afterData: AfterReturnType | undefined = undefined;
-        if (after) afterData = after(beforePayload);
+        if (after) afterData = after({ res, json }, beforePayload);
 
-        if (response.ok) {
-            data = onSuccess ? (onSuccess(response, json as JsonResponse) as JsonResponse) : (json as JsonResponse);
-            return { response, data, afterData } as {
-                response: Response;
-                data: JsonResponse;
-                afterData: AfterReturnType;
-            };
+        if (res.ok) {
+            data = onSuccess ? (onSuccess(res, json as JsonResponse) as JsonResponse) : (json as JsonResponse);
+            return { response: res, data, afterData } as SuccessResponse<JsonResponse, AfterReturnType>;
         }
-        data = onError ? (onError(response, json as JsonError) as JsonError) : (json as JsonError);
-        return { response, data, afterData } as { response: Response; data: JsonError; afterData: AfterReturnType };
+        data = onError ? (onError(res, json as JsonError) as JsonError) : (json as JsonError);
+        return { response: res, data, afterData } as ErrorResponse<JsonError, AfterReturnType>;
     });
 };
+
+// | Promise<{
+//     response: Response;
+//     data: JsonResponse | JsonError;
+//     afterData: AfterReturnType;
+// }>
