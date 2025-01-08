@@ -7,6 +7,7 @@ export function safe<T>(fn: () => T): T {
     try {
         return fn();
     } catch (e) {
+        console.error(e);
         throw e;
     }
 }
