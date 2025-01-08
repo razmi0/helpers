@@ -1,10 +1,14 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@razmio/helpers@~0.2.1": "0.2.1",
     "jsr:@std/assert@1": "1.0.10",
     "jsr:@std/internal@^1.0.5": "1.0.5"
   },
   "jsr": {
+    "@razmio/helpers@0.2.1": {
+      "integrity": "a3f7e672bf37ebcdd21cdd0c14fd0dcc02d9817fc148b218ed5541e7305f70ad"
+    },
     "@std/assert@1.0.10": {
       "integrity": "59b5cbac5bd55459a19045d95cc7c2ff787b4f8527c0dd195078ff6f9481fbb3",
       "dependencies": [
@@ -17,6 +21,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@razmio/helpers@~0.2.1",
       "jsr:@std/assert@1"
     ]
   }
