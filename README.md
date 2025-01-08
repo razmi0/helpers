@@ -48,6 +48,15 @@ const { response, data, afterData } = await helpers.fetchWithCallbacks<
 });
 ```
 
+It follow :
+
+```text
+before
+✅ Granted all net access.
+after
+onSuccess / onError
+```
+
 Add a spinner with before and after
 
 ```ts
